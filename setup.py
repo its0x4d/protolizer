@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="protolizer",
-    version="1.0.0",
+    version="1.0.1",
     author='MosyDev',
     author_email='mostafa.uwsgi@gmail.com',
     description='A simple library to serialize and deserialize protobuf messages',
