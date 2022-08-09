@@ -12,16 +12,16 @@ class AccountSerializer(Serializer):
         schema = Account
 
     @staticmethod
-    def get_custom_balance(obj, value):
-        return value * 2
+    def get_custom_balance(obj):
+        # The obj is all the data passed to the serializer, so you can play with the data as you like...
+        return 597 * 2
 
 
 class CustomResponseTestCase(unittest.TestCase):
 
     def test_custom_response(self):
         json_data = {
-            'username': 'John Doe',
-            'balance': 597
+            'username': 'John Doe'
         }
         serializer = AccountSerializer(json_data)
         proto_data = serializer.protobuf
