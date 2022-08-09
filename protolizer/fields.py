@@ -1,6 +1,7 @@
 import functools
 import inspect
 from datetime import datetime
+from typing import Any
 
 try:
     from collections import Mapping
@@ -103,12 +104,27 @@ def set_value(dictionary, keys, value):
 
 class BaseField(object):
     _auto_creation_counter = 0
-
     ALLOWED_TYPES = None
-
     initial = None
 
-    def __init__(self, initial=Empty, proto_field=None, default=None, custom=False, context=None):
+    def __init__(
+            self, initial=Empty,
+            proto_field: str = None,
+            default: Any = None,
+            custom: bool = False,
+            context: Any = None
+    ):
+        """
+        Initializes the field.
+        :param initial: The initial value.
+        :param proto_field: proto field is protobuf message field
+         it's used when the input data key is different from the output data key.
+        :param default: default value for the field.
+        :param custom: whether the field is custom. If True, the field will be filled by the custom method.
+            custom method name is get_custom_{field_name}.
+            note that if the method is not defined, the field will be filled with None.
+        :param context: extra context for the field.
+        """
         # Increase the auto creation counter
         self._auto_creation_counter = BaseField._auto_creation_counter
         BaseField._auto_creation_counter += 1
@@ -129,6 +145,13 @@ class BaseField(object):
         self.pb = getattr(self.meta, 'schema', None) if self.meta else None
 
     def bind(self, field_name, parent):
+        """
+        Initializes the field name and parent for the field instance.
+
+        :param field_name: The field name.
+        :param parent: The parent field.
+        :return: None
+        """
         self.field_name = field_name
         self.parent = parent
 
@@ -187,6 +210,9 @@ class BaseField(object):
         return False, data
 
     def run_validation(self, data=Empty):
+        """
+        Run default validation on fields.
+        """
         (is_empty_value, data) = self.validate_empty_values(data)
         if is_empty_value:
             return data
@@ -262,7 +288,9 @@ class BooleanField(BaseField):
 
 
 class CharField(BaseField):
-
+    """
+    A field that validates input as a string.
+    """
     def __init__(self, **kwargs):
         self.trim_whitespace = kwargs.pop('trim_whitespace', True)
         super().__init__(**kwargs)
@@ -282,6 +310,9 @@ class CharField(BaseField):
 
 
 class IntField(BaseField):
+    """
+    A field that validates input as an integer.
+    """
 
     def to_internal_value(self, data):
         try:
@@ -300,6 +331,9 @@ class IntField(BaseField):
 
 
 class FloatField(BaseField):
+    """
+    A field that validates input as a float.
+    """
 
     def to_internal_value(self, data):
         try:
@@ -318,6 +352,9 @@ class FloatField(BaseField):
 
 
 class ObjectIdField(BaseField):
+    """
+    A field that validates input as an ObjectId.
+    """
 
     def to_internal_value(self, data):
         return str(data)
@@ -333,7 +370,16 @@ class ObjectIdField(BaseField):
 
 
 class CustomField(BaseField):
+    """
+    A field that validates input as a custom field.
+    custom fields are defined in the model class
+    e.g:
+        class MyModel(Model):
+            username = CustomField()
 
+            def get_custom_username(obj):
+                return "John Doe"
+    """
     def __init__(self, child=None):
         self.child = child
         super().__init__(custom=True)
@@ -363,6 +409,9 @@ class CustomField(BaseField):
 
 
 class ListField(BaseField):
+    """
+    A field that validates input as a list.
+    """
 
     ALLOWED_TYPES = [
         'CharField', 'DateTimeField', 'IntField',
@@ -403,6 +452,9 @@ class ListField(BaseField):
 
 
 class DictField(BaseField):
+    """
+    A field that validates input as a dict.
+    """
 
     ALLOWED_TYPES = ['ListField']
 
@@ -446,6 +498,9 @@ class DictField(BaseField):
 
 
 class DateTimeField(BaseField):
+    """
+    A field that validates input as a datetime.
+    """
 
     def __init__(self, fmt='%Y-%m-%dT%H:%M:%S', **kwargs):
         self.format = fmt
@@ -477,6 +532,9 @@ class DateTimeField(BaseField):
 
 
 class TimestampField(BaseField):
+    """
+    A field that validates input as a timestamp.
+    """
 
     ALLOWED_TYPES = ['IntField', 'CharField', 'FloatField']
 
