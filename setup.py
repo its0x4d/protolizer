@@ -12,6 +12,7 @@ setuptools.setup(
     url='https://github.com/its0x4d/protolizer',
     packages=setuptools.find_packages(),
     long_description=long_description,
+    long_description_content_type="text/markdown",
     license='GPLv3',
     classifiers=[
         'Programming Language :: Python :: 3',
