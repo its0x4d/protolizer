@@ -1,7 +1,6 @@
 import copy
-import re
 from functools import cached_property
-from typing import List, Optional, Union
+from typing import List, Union
 
 from google.protobuf.json_format import ParseDict, MessageToDict  # noqa
 from google.protobuf.message import Message  # noqa
@@ -303,7 +302,7 @@ class Serializer(BaseSerializer, metaclass=SerializerMetaclass):
         """
         Returns a dictionary of {field_name: field_instance}.
         """
-        return copy.deepcopy(self._declared_fields)
+        return copy.deepcopy(self._declared_fields) # noqa
 
     def get_initial(self):
         if hasattr(self, 'initial_data'):
