@@ -11,9 +11,11 @@ setuptools.setup(
     description='A simple library to serialize and deserialize protobuf messages',
     url='https://github.com/its0x4d/protolizer',
     packages=setuptools.find_packages(),
+    long_description=long_description,
     license='GPLv3',
     classifiers=[
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
-    ]
+    ],
+    keywords='protobuf serialization deserialization',
 )
