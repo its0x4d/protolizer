@@ -1,6 +1,6 @@
 import copy
 from functools import cached_property
-from typing import List, Union
+from typing import List, Union, Any
 
 from google.protobuf.json_format import ParseDict, MessageToDict  # noqa
 from google.protobuf.message import Message  # noqa
@@ -140,7 +140,7 @@ class BaseSerializer(BaseField):
         return self._data
 
     @property
-    def protobuf(self) -> Union[List[Message], Message]:
+    def protobuf(self) -> Union[List[Any], Any]:
         """
         Returns the serialized data on the serializer as protobuf message.
 
