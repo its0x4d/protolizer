@@ -1,4 +1,4 @@
-# Protocolize Documentation
+# Protolizer Documentation
 
 ## Introduction
 Protolizer is a simple library to serialize and deserialize protobuf messages
