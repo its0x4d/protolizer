@@ -155,7 +155,7 @@ class BaseField(object):
 
         if self.custom:
             fill_method = getattr(instance, f'get_custom_{self.field_name}', None)
-            return fill_method(dictionary, dictionary[self.field_name]) if fill_method else None
+            return fill_method(dictionary) if fill_method else None
 
         return dictionary[self.field_name] if self.field_name in dictionary and not self.custom else Empty
 
