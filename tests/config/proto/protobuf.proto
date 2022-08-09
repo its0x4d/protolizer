@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+service TestCaseService {
+  rpc Echo (EchoRequest) returns (EchoResponse) {}
+  rpc GetAccount (GetAccountRequest) returns (Account) {}
+}
+
+message EchoRequest {
+  string message = 1;
+}
+
+message EchoResponse {
+  string message = 1;
+}
+
+message GetAccountRequest {
+  string account_id = 1;
+}
+
+message Account {
+  string username = 1;
+  int32 balance = 2;
+}
