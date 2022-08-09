@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x0eprotobuf.proto\"\x1e\n\x0b\x45\x63hoRequest\x12\x0f\n\x07message\x18\x01 \x01(\t\"\x1f\n\x0c\x45\x63hoResponse\x12\x0f\n\x07message\x18\x01 \x01(\t\"\'\n\x11GetAccountRequest\x12\x12\n\naccount_id\x18\x01 \x01(\t\",\n\x07\x41\x63\x63ount\x12\x10\n\x08username\x18\x01 \x01(\t\x12\x0f\n\x07\x62\x61lance\x18\x02 \x01(\x05\x32\x66\n\x0fTestCaseService\x12%\n\x04\x45\x63ho\x12\x0c.EchoRequest\x1a\r.EchoResponse\"\x00\x12,\n\nGetAccount\x12\x12.GetAccountRequest\x1a\x08.Account\"\x00\x62\x06proto3'
+  serialized_pb=b'\n\x0eprotobuf.proto\"\x1e\n\x0b\x45\x63hoRequest\x12\x0f\n\x07message\x18\x01 \x01(\t\"\x1f\n\x0c\x45\x63hoResponse\x12\x0f\n\x07message\x18\x01 \x01(\t\"\'\n\x11GetAccountRequest\x12\x12\n\naccount_id\x18\x01 \x01(\t\"P\n\x07\x41\x63\x63ount\x12\x10\n\x08username\x18\x01 \x01(\t\x12\x0f\n\x07\x62\x61lance\x18\x02 \x01(\x05\x12\"\n\x08settings\x18\x03 \x01(\x0b\x32\x10.AccountSettings\"$\n\x0f\x41\x63\x63ountSettings\x12\x11\n\tis_public\x18\x01 \x01(\x08\x32\x66\n\x0fTestCaseService\x12%\n\x04\x45\x63ho\x12\x0c.EchoRequest\x1a\r.EchoResponse\"\x00\x12,\n\nGetAccount\x12\x12.GetAccountRequest\x1a\x08.Account\"\x00\x62\x06proto3'
 )
 
 
@@ -143,6 +143,13 @@ _ACCOUNT = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='settings', full_name='Account.settings', index=2,
+      number=3, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -156,13 +163,47 @@ _ACCOUNT = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=124,
-  serialized_end=168,
+  serialized_end=204,
 )
 
+
+_ACCOUNTSETTINGS = _descriptor.Descriptor(
+  name='AccountSettings',
+  full_name='AccountSettings',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='is_public', full_name='AccountSettings.is_public', index=0,
+      number=1, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=206,
+  serialized_end=242,
+)
+
+_ACCOUNT.fields_by_name['settings'].message_type = _ACCOUNTSETTINGS
 DESCRIPTOR.message_types_by_name['EchoRequest'] = _ECHOREQUEST
 DESCRIPTOR.message_types_by_name['EchoResponse'] = _ECHORESPONSE
 DESCRIPTOR.message_types_by_name['GetAccountRequest'] = _GETACCOUNTREQUEST
 DESCRIPTOR.message_types_by_name['Account'] = _ACCOUNT
+DESCRIPTOR.message_types_by_name['AccountSettings'] = _ACCOUNTSETTINGS
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 EchoRequest = _reflection.GeneratedProtocolMessageType('EchoRequest', (_message.Message,), {
@@ -193,6 +234,13 @@ Account = _reflection.GeneratedProtocolMessageType('Account', (_message.Message,
   })
 _sym_db.RegisterMessage(Account)
 
+AccountSettings = _reflection.GeneratedProtocolMessageType('AccountSettings', (_message.Message,), {
+  'DESCRIPTOR' : _ACCOUNTSETTINGS,
+  '__module__' : 'protobuf_pb2'
+  # @@protoc_insertion_point(class_scope:AccountSettings)
+  })
+_sym_db.RegisterMessage(AccountSettings)
+
 
 
 _TESTCASESERVICE = _descriptor.ServiceDescriptor(
@@ -202,8 +250,8 @@ _TESTCASESERVICE = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=170,
-  serialized_end=272,
+  serialized_start=244,
+  serialized_end=346,
   methods=[
   _descriptor.MethodDescriptor(
     name='Echo',

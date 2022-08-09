@@ -20,4 +20,9 @@ message GetAccountRequest {
 message Account {
   string username = 1;
   int32 balance = 2;
+  AccountSettings settings = 3;
+}
+
+message AccountSettings {
+  bool is_public = 1;
 }
