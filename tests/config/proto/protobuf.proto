@@ -1,16 +1,21 @@
 syntax = "proto3";
 
 service TestCaseService {
-  rpc Echo (EchoRequest) returns (EchoResponse) {}
+  rpc TestFields (FieldsMessage) returns (FieldsMessage) {}
   rpc GetAccount (GetAccountRequest) returns (Account) {}
 }
 
-message EchoRequest {
-  string message = 1;
-}
+message FieldsMessage {
+  int32 int32_field = 1;
+  float float_field = 2;
+  double double_field = 3;
+  bool bool_field = 4;
+  string string_field = 5;
+  bytes bytes_field = 6;
+  repeated string repeated_string_field = 7;
+  Account nested_field = 8;
+  repeated Account repeated_nested_field = 9;
 
-message EchoResponse {
-  string message = 1;
 }
 
 message GetAccountRequest {

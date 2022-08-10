@@ -14,10 +14,10 @@ class TestCaseServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.Echo = channel.unary_unary(
-                '/TestCaseService/Echo',
-                request_serializer=protobuf__pb2.EchoRequest.SerializeToString,
-                response_deserializer=protobuf__pb2.EchoResponse.FromString,
+        self.TestFields = channel.unary_unary(
+                '/TestCaseService/TestFields',
+                request_serializer=protobuf__pb2.FieldsMessage.SerializeToString,
+                response_deserializer=protobuf__pb2.FieldsMessage.FromString,
                 )
         self.GetAccount = channel.unary_unary(
                 '/TestCaseService/GetAccount',
@@ -29,7 +29,7 @@ class TestCaseServiceStub(object):
 class TestCaseServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
-    def Echo(self, request, context):
+    def TestFields(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -44,10 +44,10 @@ class TestCaseServiceServicer(object):
 
 def add_TestCaseServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'Echo': grpc.unary_unary_rpc_method_handler(
-                    servicer.Echo,
-                    request_deserializer=protobuf__pb2.EchoRequest.FromString,
-                    response_serializer=protobuf__pb2.EchoResponse.SerializeToString,
+            'TestFields': grpc.unary_unary_rpc_method_handler(
+                    servicer.TestFields,
+                    request_deserializer=protobuf__pb2.FieldsMessage.FromString,
+                    response_serializer=protobuf__pb2.FieldsMessage.SerializeToString,
             ),
             'GetAccount': grpc.unary_unary_rpc_method_handler(
                     servicer.GetAccount,
@@ -65,7 +65,7 @@ class TestCaseService(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
-    def Echo(request,
+    def TestFields(request,
             target,
             options=(),
             channel_credentials=None,
@@ -75,9 +75,9 @@ class TestCaseService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/TestCaseService/Echo',
-            protobuf__pb2.EchoRequest.SerializeToString,
-            protobuf__pb2.EchoResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/TestCaseService/TestFields',
+            protobuf__pb2.FieldsMessage.SerializeToString,
+            protobuf__pb2.FieldsMessage.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
