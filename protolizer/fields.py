@@ -17,7 +17,6 @@ __all__ = [
     'BooleanField',
     'CharField',
     'IntField',
-    'ObjectIdField',
     'CustomField',
     'set_value'
 ]
@@ -343,24 +342,6 @@ class FloatField(BaseField):
 
     def to_representation(self, value):
         return float(value) if value is not None else None
-
-    def to_protobuf(self, value):
-        _repr = self.to_representation(value)
-        if _repr is None:
-            return None
-        return _repr
-
-
-class ObjectIdField(BaseField):
-    """
-    A field that validates input as an ObjectId.
-    """
-
-    def to_internal_value(self, data):
-        return str(data)
-
-    def to_representation(self, value):
-        return str(value)
 
     def to_protobuf(self, value):
         _repr = self.to_representation(value)
