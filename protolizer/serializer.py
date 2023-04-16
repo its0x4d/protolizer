@@ -327,6 +327,10 @@ class Serializer(BaseSerializer, metaclass=SerializerMetaclass):
         fields = self._readable_fields
 
         for field in fields:
+            if self.context == 'self' and isinstance(self.parent.context, dict):
+                field.context = self.parent.context
+            else:
+                field.context = self.context
             validate_method = getattr(self, 'validate_' + field.field_name, None)
             primitive_value = field.get_value(data, self)
             try:
