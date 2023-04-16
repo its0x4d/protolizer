@@ -205,6 +205,10 @@ class ListSerializer(BaseSerializer):
         ret = []
         errors = []
         for item in data:
+            if self.child.context == 'self' and isinstance(self.parent.context, dict):
+                self.child.context = self.parent.context
+            else:
+                self.child.context = self.context
             try:
                 validated = self.child.run_validation(item)
             except ValidationError as exc:
