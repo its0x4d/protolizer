@@ -63,17 +63,19 @@ if you want to see more examples, please check [examples](/examples) directory
 
 ## Contribute
 
-```text
-If you want to contribute to this project, please open an issue on GitHub.
-```
+- Fork the repository
+- Create a branch for your feature
+- Make your changes
+- Create a pull request
+- Wait for the code review
+- If everything is OK, your pull request will be merged
 
 ## License
 
-```text
-This project is licensed under the MIT License.
-```
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
+
+
 
 ## Author
-This project is authored by [@uwsgi](https://instagram.com/uwsgi)
-
+This project is authored by [@uwsgi](https://t.me/uwsgi) on Telegram.
 
