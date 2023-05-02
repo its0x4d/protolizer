@@ -3,6 +3,8 @@ import inspect
 from datetime import datetime
 from typing import Any
 
+from protolizer.exceptions import InvalidDataError
+
 try:
     from collections import Mapping
 except ImportError:
@@ -18,6 +20,11 @@ __all__ = [
     'CharField',
     'IntField',
     'CustomField',
+    'DateTimeField',
+    'TimestampField',
+    'FloatField',
+    'DictField',
+    'ListField',
     'set_value'
 ]
 
@@ -267,7 +274,7 @@ class BooleanField(BaseField):
                 return False
             elif data in self.NULL_VALUES:
                 return None
-            raise ValueError('Invalid boolean value.')
+            raise InvalidDataError(field=self.field_name, data=data, expected_type='boolean/None')
         return data
 
     def to_representation(self, value):
@@ -290,8 +297,8 @@ class CharField(BaseField):
     """
     A field that validates input as a string.
     """
-    def __init__(self, **kwargs):
-        self.trim_whitespace = kwargs.pop('trim_whitespace', True)
+    def __init__(self, trim_whitespace: bool = False, **kwargs):
+        self.trim_whitespace = trim_whitespace
         super().__init__(**kwargs)
 
     def to_internal_value(self, data):
@@ -317,7 +324,7 @@ class IntField(BaseField):
         try:
             return int(data)
         except (TypeError, ValueError):
-            raise ValueError('Expected a number.')
+            raise InvalidDataError(field=self.field_name, data=data, expected_type='integer')
 
     def to_representation(self, value):
         return int(value) if value is not None else None
@@ -338,7 +345,7 @@ class FloatField(BaseField):
         try:
             return float(data)
         except (TypeError, ValueError):
-            raise ValueError('Expected a number.')
+            raise InvalidDataError(field=self.field_name, data=data, expected_type='float')
 
     def to_representation(self, value):
         return float(value) if value is not None else None
@@ -355,7 +362,7 @@ class CustomField(BaseField):
     A field that validates input as a custom field.
     custom fields are defined in the model class
     e.g:
-        class MyModel(Model):
+        class MyModel(Serializer):
             username = CustomField()
 
             def get_custom_username(obj):
