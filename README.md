@@ -47,6 +47,7 @@ print(protobuf_deserializer.data)
 json_deserializer = AccountSerializer(json_serializer.data)
 print(json_deserializer.protobuf)
 ```
+if you want to see more examples, please check [examples](/examples) directory
 
 ## Supported fields
 
