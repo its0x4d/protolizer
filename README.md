@@ -50,15 +50,15 @@ print(json_deserializer.protobuf)
 
 ## Supported fields
 
-[X] CharField
-[X] IntField
-[X] FloatField
-[X] BooleanField
-[X] DateTimeField
-[X] TimestampField
-[X] DictField
-[X] ListField
-[X] CustomField (for custom responses)
+- [X] CharField
+- [X] IntField
+- [X] FloatField
+- [X] BooleanField
+- [X] DateTimeField
+- [X] TimestampField
+- [X] DictField
+- [X] ListField
+- [X] CustomField (for custom responses)
 
 ## Contribute
 
