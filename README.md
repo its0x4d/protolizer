@@ -1,12 +1,18 @@
 # Protolizer Documentation
 
 ## Introduction
-Protolizer is a simple library to serialize and deserialize protobuf messages
+Protolizer is a simple library to serialize and deserialize protobuf messages (JSON/dict ↔ protobuf). It does **not** require gRPC—only the `protobuf` package.
 
 ## Installation
 
 ```bash
 pip install protolizer
+```
+
+For running the project's tests (which use generated gRPC stubs), install dev dependencies:
+
+```bash
+pip install -r requirements.txt -r requirements-dev.txt
 ```
 
 ## Usage for serialization
@@ -19,8 +25,8 @@ class AccountSerializer(Serializer):
     balance = fields.IntField()
 
     class Meta:
-        # Here we define our generated protobuf message name
-        # our protobuf message is something like:
+        # schema must be your generated protobuf message class (e.g. from *_pb2 import Account)
+        # Your .proto might look like:
         # message Account {
         #     string username = 1;
         #     int32 balance = 2;
@@ -47,7 +53,9 @@ print(protobuf_deserializer.data)
 json_deserializer = AccountSerializer(json_serializer.data)
 print(json_deserializer.protobuf)
 ```
-if you want to see more examples, please check [examples](/examples) directory
+If you want to see more examples, please check the [examples](examples) directory.
+
+**Note:** `Meta.schema` must be the generated protobuf message class (from your `*_pb2` module). gRPC (`grpcio`) is only needed if you use gRPC services; for JSON ↔ protobuf conversion, the `protobuf` package alone is enough.
 
 ## Supported fields
 

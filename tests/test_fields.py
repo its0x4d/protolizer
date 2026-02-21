@@ -1,6 +1,8 @@
 import unittest
+from datetime import datetime
 
 from protolizer import Serializer, fields
+from protolizer.exceptions import InvalidDataError
 from tests.config.generated_proto.protobuf_pb2 import Account, FieldsMessage
 
 
@@ -20,6 +22,7 @@ class TestFieldsSerializer(Serializer):
     bool_field = fields.BooleanField()
     string_field = fields.CharField()
     bytes_field = fields.CharField()
+    repeated_string_field = fields.ListField(fields.CharField())
     nested_field = NestedFieldSerializer()
     repeated_nested_field = NestedFieldSerializer(many=True)
 
@@ -198,3 +201,63 @@ class FieldsTestWithJsonTestCase(unittest.TestCase):
         })
         proto_data = serializer.protobuf
         self.assertEqual(len(proto_data.repeated_nested_field), 0)
+
+    def test_repeated_string_field(self):
+        serializer = TestFieldsSerializer({
+            'repeated_string_field': ['a', 'b', 'c']
+        })
+        proto_data = serializer.protobuf
+        self.assertEqual(list(proto_data.repeated_string_field), ['a', 'b', 'c'])
+        serializer2 = TestFieldsSerializer(proto_data)
+        self.assertEqual(serializer2.data['repeated_string_field'], ['a', 'b', 'c'])
+
+
+class FieldEdgeCasesTestCase(unittest.TestCase):
+    """Tests for DateTimeField, TimestampField, InvalidDataError, and field defaults."""
+
+    def test_datetime_field_roundtrip(self):
+        field = fields.DateTimeField(fmt='%Y-%m-%dT%H:%M:%S')
+        field.bind('created', None)
+        s = '2024-01-15T12:00:00'
+        internal = field.to_internal_value(s)
+        self.assertIsInstance(internal, datetime)
+        self.assertEqual(internal.year, 2024)
+        self.assertEqual(internal.month, 1)
+        self.assertEqual(internal.day, 15)
+        rep = field.to_representation(internal)
+        self.assertEqual(rep, s)
+
+    def test_timestamp_field_roundtrip(self):
+        field = fields.TimestampField()
+        field.bind('ts', None)
+        internal = field.to_internal_value(1705312800)  # 2024-01-15 12:00:00 UTC approx
+        self.assertIsInstance(internal, (int, float))
+        rep = field.to_representation(internal)
+        self.assertIsInstance(rep, (int, float))
+
+    def test_int_field_invalid_raises_invalid_data_error(self):
+        field = fields.IntField()
+        field.bind('balance', None)
+        with self.assertRaises(InvalidDataError) as ctx:
+            field.run_validation('not a number')
+        self.assertEqual(ctx.exception.field, 'balance')
+        self.assertIn('integer', str(ctx.exception.expected_type))
+
+    def test_float_field_invalid_raises_invalid_data_error(self):
+        field = fields.FloatField()
+        field.bind('score', None)
+        with self.assertRaises(InvalidDataError) as ctx:
+            field.run_validation('not a float')
+        self.assertEqual(ctx.exception.field, 'score')
+
+    def test_boolean_field_invalid_raises_invalid_data_error(self):
+        field = fields.BooleanField()
+        field.bind('flag', None)
+        with self.assertRaises(InvalidDataError) as ctx:
+            field.run_validation('invalid_bool')
+        self.assertEqual(ctx.exception.field, 'flag')
+
+    def test_char_field_trim_whitespace(self):
+        field = fields.CharField(trim_whitespace=True)
+        field.bind('name', None)
+        self.assertEqual(field.to_internal_value('  hello  '), 'hello')

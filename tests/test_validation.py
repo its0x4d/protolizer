@@ -52,6 +52,14 @@ class ValidationTestCase(unittest.TestCase):
             'username': 'Username must be at least 3 characters long'
         })
 
+    def test_is_valid_raise_exception_raises_validation_error(self):
+        protobuf = Account(username='Jo', balance=-1)
+        serializer = AccountSerializer(data=protobuf)
+        with self.assertRaises(ValidationError) as ctx:
+            serializer.is_valid(raise_exception=True)
+        self.assertIn('balance', ctx.exception.detail)
+        self.assertIn('username', ctx.exception.detail)
+
 
 if __name__ == '__main__':
     unittest.main()

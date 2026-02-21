@@ -30,7 +30,11 @@ class PerSerializeTestCase(unittest.TestCase):
         self.assertNotIn('balance', MessageToDict(proto_data))
 
     def test_with_protobuf_input(self):
-        pass
+        protobuf = Account(username='Jane', balance=999)
+        serializer = AccountSerializer(protobuf)
+        proto_data = serializer.protobuf
+        self.assertEqual(proto_data.username, 'Jane')
+        self.assertNotIn('balance', MessageToDict(proto_data))
 
 
 if __name__ == '__main__':

@@ -1,6 +1,6 @@
 import copy
 from functools import cached_property
-from typing import List, Union, Any
+from typing import Any, Dict, List, Optional, Type, TypeVar, Union
 
 from google.protobuf.json_format import ParseDict, MessageToDict  # noqa
 from google.protobuf.message import Message  # noqa
@@ -10,18 +10,22 @@ from protolizer.fields import BaseField, Empty, set_value
 from protolizer.helpers import BindingDict, ReturnList, ReturnDict, NestedBoundField, BoundField
 from protolizer.meta import SerializerMetaclass
 
+_M = TypeVar("_M", bound=Message)
 
-def to_protobuf(data, schema):
+
+def to_protobuf(data: Dict[str, Any], schema: Type[_M]) -> _M:
     """
     Convert data to protobuf.
-    :return: protobuf
-    :rtype: object
+    :param data: Dictionary to convert (e.g. from serializer.data).
+    :param schema: Generated protobuf message class (e.g. from Meta.schema).
+    :return: Protobuf message instance.
     """
     protobuf = schema() if callable(schema) else schema
     return ParseDict(data, protobuf)
 
 
-def proto_to_dict(data):
+def proto_to_dict(data: Message) -> Dict[str, Any]:
+    """Convert a protobuf message to a dict, preserving field names."""
     return MessageToDict(data, preserving_proto_field_name=True)
 
 
@@ -30,7 +34,12 @@ class BaseSerializer(BaseField):
     Base class for all serializers.
     """
 
-    def __init__(self, instance=None, data=Empty, **kwargs):
+    def __init__(
+        self,
+        instance: Optional[Union[Message, Dict[str, Any], List[Any]]] = None,
+        data: Any = Empty,
+        **kwargs: Any,
+    ) -> None:
         self.instance = instance
 
         if isinstance(self.instance, Message):
@@ -64,7 +73,7 @@ class BaseSerializer(BaseField):
         return cls
 
     @classmethod
-    def many_init(cls, *args, **kwargs):
+    def many_init(cls, *args: Any, **kwargs: Any) -> "ListSerializer":
         child_serializer = cls(*args, **kwargs)
         list_kwargs = {
             'child': child_serializer
@@ -76,23 +85,23 @@ class BaseSerializer(BaseField):
         list_serializer_class = getattr(meta, 'list_serializer_class', ListSerializer)
         return list_serializer_class(*args, **list_kwargs)
 
-    def to_internal_value(self, data):
+    def to_internal_value(self, data: Any) -> Any:
         raise NotImplementedError('.to_internal_value() must be implemented.')
 
-    def to_representation(self, value):
+    def to_representation(self, value: Any) -> Any:
         raise NotImplementedError('.to_representation() must be implemented.')
 
-    def to_protobuf(self, data):
+    def to_protobuf(self, data: Any) -> Any:
         raise NotImplementedError('.to_protobuf() must be implemented.')
 
-    def pre_serialize(self, data):
+    def pre_serialize(self, data: Any) -> Any:
         """
         Hook for pre serialization.
         Note that pre_serialize only works for protobuf serializers. (not for json serializers)
         """
         return data
 
-    def is_valid(self, raise_exception=False):
+    def is_valid(self, raise_exception: bool = False) -> bool:
         """
         Validates the data.
         """
@@ -187,10 +196,10 @@ class ListSerializer(BaseSerializer):
     Serializer for list of objects.
     """
 
-    child = None
-    many = True
+    child: Any = None
+    many: bool = True
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         self.child = kwargs.pop('child', copy.deepcopy(self.child))
         super().__init__(*args, **kwargs)
         # Bind child to self.
@@ -201,8 +210,8 @@ class ListSerializer(BaseSerializer):
             return self.to_representation(self.initial_data)
         return []
 
-    def to_internal_value(self, data):
-        ret = []
+    def to_internal_value(self, data: List[Any]) -> List[Any]:
+        ret: List[Any] = []
         errors = []
         for item in data:
             if self.child.context == 'self' and isinstance(self.parent.context, dict):
@@ -222,10 +231,10 @@ class ListSerializer(BaseSerializer):
 
         return ret
 
-    def to_representation(self, data):
+    def to_representation(self, data: List[Any]) -> List[Any]:
         return [self.child.to_representation(item) for item in data]
 
-    def to_protobuf(self, data):
+    def to_protobuf(self, data: Any) -> Any:
         return self.child.to_protobuf(data)
 
     def pre_serialize(self, data):
@@ -252,7 +261,7 @@ class ListSerializer(BaseSerializer):
 
         return value
 
-    def is_valid(self, raise_exception=False):
+    def is_valid(self, raise_exception: bool = False) -> bool:
         """
         This implementation is the same as the default, but we use lists as default data instead of dicts.
         """
@@ -302,13 +311,13 @@ class Serializer(BaseSerializer, metaclass=SerializerMetaclass):
         for field in self.fields.values():
             yield field
 
-    def get_fields(self):
+    def get_fields(self) -> Dict[str, BaseField]:
         """
         Returns a dictionary of {field_name: field_instance}.
         """
-        return copy.deepcopy(self._declared_fields) # noqa
+        return copy.deepcopy(self._declared_fields)  # noqa
 
-    def get_initial(self):
+    def get_initial(self) -> Dict[str, Any]:
         if hasattr(self, 'initial_data'):
             return dict([
                 (field_name, field.get_value(self.initial_data, self))
@@ -321,9 +330,9 @@ class Serializer(BaseSerializer, metaclass=SerializerMetaclass):
             for field in self.fields.values()
         ])
 
-    def to_internal_value(self, data):
-        ret = dict()
-        errors = dict()
+    def to_internal_value(self, data: Any) -> Dict[str, Any]:
+        ret: Dict[str, Any] = {}
+        errors: Dict[str, Any] = {}
         fields = self._readable_fields
 
         for field in fields:
@@ -347,8 +356,8 @@ class Serializer(BaseSerializer, metaclass=SerializerMetaclass):
 
         return ret
 
-    def to_representation(self, instance):
-        ret = {}
+    def to_representation(self, instance: Dict[str, Any]) -> Dict[str, Any]:
+        ret: Dict[str, Any] = {}
         fields = self._readable_fields
         for field in fields:
             attribute = field.get_attribute(instance)
@@ -359,7 +368,7 @@ class Serializer(BaseSerializer, metaclass=SerializerMetaclass):
                 ret[key] = field.to_representation(attribute)
         return ret
 
-    def to_protobuf(self, data):
+    def to_protobuf(self, data: Dict[str, Any]) -> Any:
         if self.pb:
             return to_protobuf(data, self.pb)
         return self.pb

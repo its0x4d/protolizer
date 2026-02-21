@@ -1,0 +1,4 @@
+# Install with: pip install -r requirements.txt -r requirements-dev.txt
+-r requirements.txt
+# For running tests that use generated gRPC stubs
+grpcio>=1.54.0

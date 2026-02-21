@@ -1,2 +1,2 @@
-grpcio==1.54.0
-protobuf==3.20.3
+# Core dependency for JSON <-> protobuf (no gRPC)
+protobuf>=6.0.0

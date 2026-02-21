@@ -28,6 +28,13 @@ class CustomResponseTestCase(unittest.TestCase):
         self.assertEqual(proto_data.username, 'John Doe')
         self.assertEqual(proto_data.balance, 1194)
 
+    def test_custom_field_to_representation_with_list(self):
+        """CustomField with child must return a list when value is a list (not pass list to child)."""
+        field = fields.CustomField(child=fields.CharField())
+        field.bind('tags', None)
+        result = field.to_representation(['a', 'b', 'c'])
+        self.assertEqual(result, ['a', 'b', 'c'])
+
 
 if __name__ == '__main__':
     unittest.main()

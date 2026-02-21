@@ -1,7 +1,7 @@
 import functools
 import inspect
 from datetime import datetime
-from typing import Any
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from protolizer.exceptions import InvalidDataError
 
@@ -59,7 +59,7 @@ def is_simple_callable(obj):
     )
 
 
-def get_attribute(instance, attrs):
+def get_attribute(instance: Any, attrs: List[str]) -> Any:
     """
     Similar to Python's built in `getattr(instance, attr)`,
     but takes a list of nested attributes, instead of a single attribute.
@@ -87,7 +87,7 @@ def get_attribute(instance, attrs):
     return instance
 
 
-def set_value(dictionary, keys, value):
+def set_value(dictionary: Dict[str, Any], keys: List[str], value: Any) -> None:
     """
     Similar to Python's built in `dictionary[key] = value`,
     but takes a list of nested keys instead of a single key.
@@ -114,12 +114,13 @@ class BaseField(object):
     initial = None
 
     def __init__(
-            self, initial=Empty,
-            proto_field: str = None,
-            default: Any = None,
-            custom: bool = False,
-            context: Any = None
-    ):
+        self,
+        initial: Any = Empty,
+        proto_field: Optional[str] = None,
+        default: Any = None,
+        custom: bool = False,
+        context: Any = None,
+    ) -> None:
         """
         Initializes the field.
         :param initial: The initial value.
@@ -150,7 +151,7 @@ class BaseField(object):
         self.meta = getattr(self, 'Meta', None)
         self.pb = getattr(self.meta, 'schema', None) if self.meta else None
 
-    def bind(self, field_name, parent):
+    def bind(self, field_name: str, parent: Any) -> None:
         """
         Initializes the field name and parent for the field instance.
 
@@ -170,10 +171,10 @@ class BaseField(object):
         else:
             self.attributes = self.source.split('.')
 
-    def get_initial(self):
+    def get_initial(self) -> Any:
         return self.initial() if callable(self.initial) else self.initial
 
-    def get_value(self, dictionary, instance):
+    def get_value(self, dictionary: Any, instance: Any) -> Any:
         """
         Given the *incoming* dictionary, return the value for this field
         that should be validated and transformed to a native value.
@@ -188,20 +189,20 @@ class BaseField(object):
 
         return dictionary[self.field_name] if self.field_name in dictionary and not self.custom else Empty
 
-    def get_attribute(self, instance):
+    def get_attribute(self, instance: Any) -> Any:
         """
         Given the *outgoing* instance, return the value for this field
         that should be serialized.
         """
         return get_attribute(instance, self.attributes)
 
-    def get_default(self):
+    def get_default(self) -> Any:
         """
         Return the default value for this field.
         """
         return self.default
 
-    def validate_empty_values(self, data):
+    def validate_empty_values(self, data: Any) -> Tuple[bool, Any]:
         """
         Validate empty values, and either:
         """
@@ -215,7 +216,7 @@ class BaseField(object):
 
         return False, data
 
-    def run_validation(self, data=Empty):
+    def run_validation(self, data: Any = Empty) -> Any:
         """
         Run default validation on fields.
         """
@@ -225,20 +226,20 @@ class BaseField(object):
 
         return self.to_internal_value(data)
 
-    def to_internal_value(self, data):
+    def to_internal_value(self, data: Any) -> Any:
         """
         Given the *incoming* primitive data, return the native value.
         """
         raise NotImplementedError('`to_internal_value()` must be implemented.')
 
-    def to_representation(self, value):
+    def to_representation(self, value: Any) -> Any:
         """
         Given the native value, return the representation of this field
         that should be returned to the user.
         """
         raise NotImplementedError('`to_representation()` must be implemented.')
 
-    def to_protobuf(self, data):
+    def to_protobuf(self, data: Any) -> Any:
         """
         Given the native value, return the protobuf value.
         """
@@ -386,7 +387,7 @@ class CustomField(BaseField):
         if not self.child:
             return value
         if isinstance(value, list):
-            [self.child.to_representation(item) for item in value]
+            return [self.child.to_representation(item) for item in value]
         return self.child.to_representation(value)
 
     def to_protobuf(self, value):
@@ -403,8 +404,7 @@ class ListField(BaseField):
 
     ALLOWED_TYPES = [
         'CharField', 'DateTimeField', 'IntField',
-        'ObjectIdField', 'CustomField', 'BooleanField',
-        'FloatField'
+        'CustomField', 'BooleanField', 'FloatField',
     ]
 
     def __init__(self, child=None, **kwargs):
@@ -488,28 +488,30 @@ class DictField(BaseField):
 class DateTimeField(BaseField):
     """
     A field that validates input as a datetime.
+    Internal value is always datetime (or None). Representation is string (if format set) or timestamp float.
     """
 
-    def __init__(self, fmt='%Y-%m-%dT%H:%M:%S', **kwargs):
+    def __init__(self, fmt: Optional[str] = '%Y-%m-%dT%H:%M:%S', **kwargs: Any) -> None:
         self.format = fmt
         super().__init__(**kwargs)
 
-    def to_internal_value(self, data):
-        if data is not Empty:
-            if isinstance(data, datetime):
-                return data.strftime(self.format) if self.format else data
-            if self.format:
-                data = datetime.strptime(data, self.format)
-            else:
-                data = datetime.fromtimestamp(data)
+    def to_internal_value(self, data: Any) -> Optional[datetime]:
+        if data is Empty:
+            return data  # type: ignore[return-value]
+        if isinstance(data, datetime):
             return data
-        return data
+        if self.format:
+            return datetime.strptime(str(data), self.format)
+        return datetime.fromtimestamp(float(data))
 
-    def to_representation(self, value):
-        if value is not None:
-            if self.format and isinstance(value, datetime):
+    def to_representation(self, value: Any) -> Optional[Union[str, float]]:
+        if value is None:
+            return None
+        if isinstance(value, datetime):
+            if self.format:
                 return value.strftime(self.format)
-            return value
+            return value.timestamp()
+        # Legacy: already a string (e.g. from older serialized data)
         return value
 
     def to_protobuf(self, value):
