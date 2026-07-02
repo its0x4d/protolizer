@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-07-02
+
 ### Fixed
 
-- CI: require Python 3.10+ to match `protobuf` 6.x, format examples, and split lint/test jobs.
+- Require Python 3.10+ in package metadata to match `protobuf` 6.x compatibility.
+- CI: format examples, split lint/test jobs, and test on Python 3.10–3.13.
+- `DateTimeField` typing fix for empty values.
 
 ## [1.4.0] - 2026-07-02
 
@@ -50,7 +54,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial published release with DRF-style serializers for protobuf messages.
 - Core field types, nested serializers, hooks, and examples.
 
-[Unreleased]: https://github.com/its0x4d/protolizer/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/its0x4d/protolizer/compare/v1.4.1...HEAD
+[1.4.1]: https://github.com/its0x4d/protolizer/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/its0x4d/protolizer/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/its0x4d/protolizer/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/its0x4d/protolizer/releases/tag/v1.2.0

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "protolizer"
-version = "1.4.0"
+version = "1.4.1"
 description = "A simple library to serialize and deserialize protobuf messages"
 readme = "README.md"
 license = { text = "MIT" }
