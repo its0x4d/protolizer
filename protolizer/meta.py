@@ -13,9 +13,9 @@ class SerializerMetaclass(type):
 
     @classmethod
     def _get_declared_fields(mcs, bases, attrs):
-        fields = [(field_name, attrs.pop(field_name))
-                  for field_name, obj in list(attrs.items())
-                  if isinstance(obj, BaseField)]
+        fields = [
+            (field_name, attrs.pop(field_name)) for field_name, obj in list(attrs.items()) if isinstance(obj, BaseField)
+        ]
         fields.sort(key=lambda x: x[1]._auto_creation_counter)  # noqa
 
         # Ensures a base class field doesn't override cls attrs, and maintains
@@ -29,12 +29,14 @@ class SerializerMetaclass(type):
 
         base_fields = [
             (visit(name), f)
-            for base in bases if hasattr(base, '_declared_fields')
-            for name, f in base._declared_fields.items() if name not in known # noqa
+            for base in bases
+            if hasattr(base, "_declared_fields")
+            for name, f in base._declared_fields.items()
+            if name not in known  # noqa
         ]
 
         return OrderedDict(base_fields + fields)
 
     def __new__(mcs, name, bases, attrs):
-        attrs['_declared_fields'] = mcs._get_declared_fields(bases, attrs)
+        attrs["_declared_fields"] = mcs._get_declared_fields(bases, attrs)
         return super().__new__(mcs, name, bases, attrs)

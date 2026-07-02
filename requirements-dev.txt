@@ -1,4 +1,8 @@
-# Install with: pip install -r requirements.txt -r requirements-dev.txt
+# Install with: pip install -e ".[dev]"
+# Or: pip install -r requirements.txt -r requirements-dev.txt
 -r requirements.txt
-# For running tests that use generated gRPC stubs
 grpcio>=1.54.0
+ruff>=0.8.0
+mypy>=1.13.0
+pre-commit>=4.0.0
+types-protobuf

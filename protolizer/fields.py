@@ -1,31 +1,30 @@
+import base64
+import binascii
+import copy
 import functools
 import inspect
+from collections.abc import Mapping
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-from protolizer.exceptions import InvalidDataError
-
-try:
-    from collections import Mapping
-except ImportError:
-    # Python 3.10 Support
-    from collections.abc import Mapping
-
+from protolizer.exceptions import InvalidDataError, ValidationError
 from protolizer.helpers import DictMapper
 
 __all__ = [
-    'Empty',
-    'BaseField',
-    'BooleanField',
-    'CharField',
-    'IntField',
-    'CustomField',
-    'DateTimeField',
-    'TimestampField',
-    'FloatField',
-    'DictField',
-    'ListField',
-    'set_value'
+    "Empty",
+    "BaseField",
+    "BooleanField",
+    "CharField",
+    "BytesField",
+    "IntField",
+    "CustomField",
+    "DateTimeField",
+    "TimestampField",
+    "FloatField",
+    "EnumField",
+    "DictField",
+    "ListField",
+    "set_value",
 ]
 
 
@@ -33,6 +32,7 @@ class Empty:
     """
     Empty class to be used as a placeholder for None
     """
+
     pass
 
 
@@ -43,8 +43,8 @@ def is_simple_callable(obj):
     # Bail early since we cannot inspect built-in function signatures.
     if inspect.isbuiltin(obj):
         raise ValueError(
-            'Built-in function signatures are not injectable. '
-            'Wrap the function call in a simple, pure Python function.')
+            "Built-in function signatures are not injectable. Wrap the function call in a simple, pure Python function."
+        )
 
     if not (inspect.isfunction(obj) or inspect.ismethod(obj) or isinstance(obj, functools.partial)):
         return False
@@ -52,9 +52,7 @@ def is_simple_callable(obj):
     sig = inspect.signature(obj)
     params = sig.parameters.values()
     return all(
-        param.kind == param.VAR_POSITIONAL or
-        param.kind == param.VAR_KEYWORD or
-        param.default != param.empty
+        param.kind == param.VAR_POSITIONAL or param.kind == param.VAR_KEYWORD or param.default != param.empty
         for param in params
     )
 
@@ -82,7 +80,8 @@ def get_attribute(instance: Any, attrs: List[str]) -> Any:
                 # as an omitted field in `Field.get_attribute()`. Instead, we
                 # raise a ValueError to ensure the exception is not masked.
                 raise ValueError(
-                    'Exception raised in callable attribute "{}"; original exception was: {}'.format(attr, exc))
+                    'Exception raised in callable attribute "{}"; original exception was: {}'.format(attr, exc)
+                )
 
     return instance
 
@@ -120,6 +119,10 @@ class BaseField(object):
         default: Any = None,
         custom: bool = False,
         context: Any = None,
+        read_only: bool = False,
+        write_only: bool = False,
+        required: bool = False,
+        allow_null: bool = True,
     ) -> None:
         """
         Initializes the field.
@@ -131,6 +134,10 @@ class BaseField(object):
             custom method name is get_custom_{field_name}.
             note that if the method is not defined, the field will be filled with None.
         :param context: extra context for the field.
+        :param read_only: if True, the field is serialized but not deserialized.
+        :param write_only: if True, the field is deserialized but not serialized.
+        :param required: if True, the field must be present in input data.
+        :param allow_null: if False, None values raise a validation error.
         """
         # Increase the auto creation counter
         self._auto_creation_counter = BaseField._auto_creation_counter
@@ -141,6 +148,10 @@ class BaseField(object):
         self.default = default
         self.custom = custom
         self.context = {} if context is None else context
+        self.read_only = read_only
+        self.write_only = write_only
+        self.required = required
+        self.allow_null = allow_null
 
         # These are set up by `.bind()` when the field is added to a serializer.
         self.field_name = None
@@ -148,8 +159,8 @@ class BaseField(object):
         self.source = None
         self.attributes = None
 
-        self.meta = getattr(self, 'Meta', None)
-        self.pb = getattr(self.meta, 'schema', None) if self.meta else None
+        self.meta = getattr(self, "Meta", None)
+        self.pb = getattr(self.meta, "schema", None) if self.meta else None
 
     def bind(self, field_name: str, parent: Any) -> None:
         """
@@ -166,10 +177,10 @@ class BaseField(object):
         if self.source is None:
             self.source = field_name
 
-        if self.source == '*':
+        if self.source == "*":
             self.attributes = []
         else:
-            self.attributes = self.source.split('.')
+            self.attributes = self.source.split(".")
 
     def get_initial(self) -> Any:
         return self.initial() if callable(self.initial) else self.initial
@@ -184,7 +195,7 @@ class BaseField(object):
         dictionary = DictMapper(dictionary) if isinstance(dictionary, dict) else dictionary
 
         if self.custom:
-            fill_method = getattr(instance, f'get_custom_{self.field_name}', None)
+            fill_method = getattr(instance, f"get_custom_{self.field_name}", None)
             return fill_method(dictionary) if fill_method else None
 
         return dictionary[self.field_name] if self.field_name in dictionary and not self.custom else Empty
@@ -194,6 +205,12 @@ class BaseField(object):
         Given the *outgoing* instance, return the value for this field
         that should be serialized.
         """
+        if self.custom and self.parent is not None:
+            fill_method = getattr(self.parent, f"get_custom_{self.field_name}", None)
+            if fill_method:
+                dictionary = DictMapper(instance) if isinstance(instance, dict) else instance
+                return fill_method(dictionary)
+            return None
         return get_attribute(instance, self.attributes)
 
     def get_default(self) -> Any:
@@ -207,10 +224,14 @@ class BaseField(object):
         Validate empty values, and either:
         """
         if data is Empty:
+            if self.required:
+                raise ValidationError("This field is required.")
             return True, self.get_default()
 
         if data is None:
-            if self.source == '*':
+            if not self.allow_null:
+                raise ValidationError("This field may not be null.")
+            if self.source == "*":
                 return False, None
             return True, None
 
@@ -230,20 +251,20 @@ class BaseField(object):
         """
         Given the *incoming* primitive data, return the native value.
         """
-        raise NotImplementedError('`to_internal_value()` must be implemented.')
+        raise NotImplementedError("`to_internal_value()` must be implemented.")
 
     def to_representation(self, value: Any) -> Any:
         """
         Given the native value, return the representation of this field
         that should be returned to the user.
         """
-        raise NotImplementedError('`to_representation()` must be implemented.')
+        raise NotImplementedError("`to_representation()` must be implemented.")
 
     def to_protobuf(self, data: Any) -> Any:
         """
         Given the native value, return the protobuf value.
         """
-        raise NotImplementedError('`to_protobuf()` must be implemented.')
+        raise NotImplementedError("`to_protobuf()` must be implemented.")
 
     @property
     def root(self):
@@ -263,9 +284,9 @@ class BaseField(object):
 
 
 class BooleanField(BaseField):
-    TRUE_VALUES = ['t', 'T', 'true', 'True', 'TRUE', '1', 1, True]
-    FALSE_VALUES = ['f', 'F', 'false', 'False', 'FALSE', '0', 0, False]
-    NULL_VALUES = ['n', 'N', 'null', 'Null', 'NULL', '', None]
+    TRUE_VALUES = ["t", "T", "true", "True", "TRUE", "1", 1, True]
+    FALSE_VALUES = ["f", "F", "false", "False", "FALSE", "0", 0, False]
+    NULL_VALUES = ["n", "N", "null", "Null", "NULL", "", None]
 
     def to_internal_value(self, data):
         if data is not Empty:
@@ -275,7 +296,7 @@ class BooleanField(BaseField):
                 return False
             elif data in self.NULL_VALUES:
                 return None
-            raise InvalidDataError(field=self.field_name, data=data, expected_type='boolean/None')
+            raise InvalidDataError(field=self.field_name, data=data, expected_type="boolean/None")
         return data
 
     def to_representation(self, value):
@@ -298,6 +319,7 @@ class CharField(BaseField):
     """
     A field that validates input as a string.
     """
+
     def __init__(self, trim_whitespace: bool = False, **kwargs):
         self.trim_whitespace = trim_whitespace
         super().__init__(**kwargs)
@@ -316,6 +338,35 @@ class CharField(BaseField):
         return _repr
 
 
+class BytesField(BaseField):
+    """
+    A field that validates input as bytes.
+    """
+
+    def to_internal_value(self, data):
+        if isinstance(data, bytes):
+            return data
+        if isinstance(data, str):
+            try:
+                return base64.b64decode(data, validate=True)
+            except (ValueError, binascii.Error):
+                raise InvalidDataError(field=self.field_name, data=data, expected_type="bytes")
+        raise InvalidDataError(field=self.field_name, data=data, expected_type="bytes")
+
+    def to_representation(self, value):
+        if value is None:
+            return None
+        if isinstance(value, bytes):
+            return base64.b64encode(value).decode("ascii")
+        return value
+
+    def to_protobuf(self, value):
+        _repr = self.to_representation(value)
+        if _repr is None:
+            return None
+        return _repr
+
+
 class IntField(BaseField):
     """
     A field that validates input as an integer.
@@ -325,7 +376,7 @@ class IntField(BaseField):
         try:
             return int(data)
         except (TypeError, ValueError):
-            raise InvalidDataError(field=self.field_name, data=data, expected_type='integer')
+            raise InvalidDataError(field=self.field_name, data=data, expected_type="integer")
 
     def to_representation(self, value):
         return int(value) if value is not None else None
@@ -346,7 +397,7 @@ class FloatField(BaseField):
         try:
             return float(data)
         except (TypeError, ValueError):
-            raise InvalidDataError(field=self.field_name, data=data, expected_type='float')
+            raise InvalidDataError(field=self.field_name, data=data, expected_type="float")
 
     def to_representation(self, value):
         return float(value) if value is not None else None
@@ -356,6 +407,61 @@ class FloatField(BaseField):
         if _repr is None:
             return None
         return _repr
+
+
+class EnumField(BaseField):
+    """
+    A field that validates input as a protobuf enum value.
+    """
+
+    def __init__(self, enum_class, by_name: bool = False, **kwargs):
+        self.enum_class = enum_class
+        self.by_name = by_name
+        super().__init__(**kwargs)
+
+    def _coerce_enum_value(self, value):
+        if isinstance(value, int):
+            return value
+        if isinstance(value, str):
+            return self.enum_class.Value(value)
+        return int(value)
+
+    def to_internal_value(self, data):
+        if isinstance(data, int):
+            if data in self.enum_class.values():
+                return data
+            raise InvalidDataError(field=self.field_name, data=data, expected_type="enum")
+        if isinstance(data, str):
+            try:
+                return self.enum_class.Value(data)
+            except ValueError:
+                raise InvalidDataError(field=self.field_name, data=data, expected_type="enum")
+        raise InvalidDataError(field=self.field_name, data=data, expected_type="enum")
+
+    def to_representation(self, value):
+        if value is None:
+            return None
+        enum_value = self._coerce_enum_value(value)
+        if self.by_name:
+            return self.enum_class.Name(enum_value)
+        return enum_value
+
+    def to_protobuf(self, value):
+        _repr = self.to_representation(value)
+        if _repr is None:
+            return None
+        return _repr
+
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for key, value in self.__dict__.items():
+            if key in ("enum_class", "_args"):
+                setattr(result, key, value)
+            else:
+                setattr(result, key, copy.deepcopy(value, memo))
+        return result
 
 
 class CustomField(BaseField):
@@ -369,6 +475,7 @@ class CustomField(BaseField):
             def get_custom_username(obj):
                 return "John Doe"
     """
+
     def __init__(self, child=None):
         self.child = child
         super().__init__(custom=True)
@@ -403,19 +510,22 @@ class ListField(BaseField):
     """
 
     ALLOWED_TYPES = [
-        'CharField', 'DateTimeField', 'IntField',
-        'CustomField', 'BooleanField', 'FloatField',
+        "CharField",
+        "BytesField",
+        "DateTimeField",
+        "IntField",
+        "CustomField",
+        "BooleanField",
+        "FloatField",
+        "EnumField",
     ]
 
     def __init__(self, child=None, **kwargs):
         self.type = child
         if child and child.__class__.__name__ not in self.ALLOWED_TYPES:
             raise ValueError(
-                'type {!r} is not allowed for {!r}. '
-                'Allowed types are: {}'.format(
-                    child.__class__.__name__,
-                    self.__class__.__name__,
-                    ', '.join(self.ALLOWED_TYPES)
+                "type {!r} is not allowed for {!r}. Allowed types are: {}".format(
+                    child.__class__.__name__, self.__class__.__name__, ", ".join(self.ALLOWED_TYPES)
                 )
             )
         super().__init__(**kwargs)
@@ -444,17 +554,14 @@ class DictField(BaseField):
     A field that validates input as a dict.
     """
 
-    ALLOWED_TYPES = ['ListField']
+    ALLOWED_TYPES = ["ListField"]
 
     def __init__(self, child=None, **kwargs):
         self.type = child
         if child and child.__class__.__name__ not in self.ALLOWED_TYPES:
             raise ValueError(
-                'type {!r} is not allowed for {!r}. '
-                'Allowed types are: {}'.format(
-                    child.__class__.__name__,
-                    self.__class__.__name__,
-                    ', '.join(self.ALLOWED_TYPES)
+                "type {!r} is not allowed for {!r}. Allowed types are: {}".format(
+                    child.__class__.__name__, self.__class__.__name__, ", ".join(self.ALLOWED_TYPES)
                 )
             )
 
@@ -464,19 +571,13 @@ class DictField(BaseField):
         if data is not Empty:
             if not self.type:
                 return data
-            return {
-                key: self.type.to_internal_value(value)
-                for key, value in data.items()
-            }
+            return {key: self.type.to_internal_value(value) for key, value in data.items()}
         return data
 
     def to_representation(self, value):
         if not self.type:
             return value
-        return {
-            key: self.type.to_representation(item)
-            for key, item in value.items()
-        }
+        return {key: self.type.to_representation(item) for key, item in value.items()}
 
     def to_protobuf(self, value):
         _repr = self.to_representation(value)
@@ -491,17 +592,20 @@ class DateTimeField(BaseField):
     Internal value is always datetime (or None). Representation is string (if format set) or timestamp float.
     """
 
-    def __init__(self, fmt: Optional[str] = '%Y-%m-%dT%H:%M:%S', **kwargs: Any) -> None:
+    def __init__(self, fmt: Optional[str] = "%Y-%m-%dT%H:%M:%S", **kwargs: Any) -> None:
         self.format = fmt
         super().__init__(**kwargs)
 
     def to_internal_value(self, data: Any) -> Optional[datetime]:
         if data is Empty:
-            return data  # type: ignore[return-value]
+            return data
         if isinstance(data, datetime):
             return data
         if self.format:
-            return datetime.strptime(str(data), self.format)
+            try:
+                return datetime.strptime(str(data), self.format)
+            except ValueError:
+                raise InvalidDataError(field=self.field_name, data=data, expected_type="datetime")
         return datetime.fromtimestamp(float(data))
 
     def to_representation(self, value: Any) -> Optional[Union[str, float]]:
@@ -526,17 +630,14 @@ class TimestampField(BaseField):
     A field that validates input as a timestamp.
     """
 
-    ALLOWED_TYPES = ['IntField', 'CharField', 'FloatField']
+    ALLOWED_TYPES = ["IntField", "CharField", "FloatField"]
 
     def __init__(self, child=None, **kwargs):
         self.type = IntField() if child is None else child
         if child and child.__class__.__name__ not in self.ALLOWED_TYPES:
             raise ValueError(
-                'type {!r} is not allowed for {!r}. '
-                'Allowed types are: {}'.format(
-                    child.__class__.__name__,
-                    self.__class__.__name__,
-                    ', '.join(self.ALLOWED_TYPES)
+                "type {!r} is not allowed for {!r}. Allowed types are: {}".format(
+                    child.__class__.__name__, self.__class__.__name__, ", ".join(self.ALLOWED_TYPES)
                 )
             )
         super().__init__(**kwargs)

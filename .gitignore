@@ -143,6 +143,9 @@ venv.bak/
 .dmypy.json
 dmypy.json
 
+# ruff
+.ruff_cache/
+
 # Pyre type checker
 .pyre/
 
@@ -159,6 +162,9 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 .idea/
 
-# Project Private Files
+# Local virtual environments and tooling
+.python-version
+
+# Project private files (use scripts/regenerate_proto.sh for proto codegen)
 Makefile
 apigen.py

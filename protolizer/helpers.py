@@ -1,9 +1,5 @@
 from collections import OrderedDict
-try:
-    from collections import Mapping, MutableMapping
-except ImportError:
-    # Python 3.10 support
-    from collections.abc import Mapping, MutableMapping
+from collections.abc import Mapping, MutableMapping
 
 
 class BoundField:
@@ -13,7 +9,7 @@ class BoundField:
     providing an API similar to Django forms and form fields.
     """
 
-    def __init__(self, field, value, errors, prefix=''):
+    def __init__(self, field, value, errors, prefix=""):
         self._field = field
         self._prefix = prefix
         self.value = value
@@ -28,9 +24,7 @@ class BoundField:
         return self._field.__class__
 
     def __repr__(self):
-        return '<%s value=%s errors=%s>' % (
-            self.__class__.__name__, self.value, self.errors
-        )
+        return "<%s value=%s errors=%s>" % (self.__class__.__name__, self.value, self.errors)
 
 
 class NestedBoundField(BoundField):
@@ -40,8 +34,8 @@ class NestedBoundField(BoundField):
     `BoundField` that is used for serializer fields.
     """
 
-    def __init__(self, field, value, errors, prefix=''):
-        if value is None or value == '' or not isinstance(value, Mapping):
+    def __init__(self, field, value, errors, prefix=""):
+        if value is None or value == "" or not isinstance(value, Mapping):
             value = {}
         super().__init__(field, value, errors, prefix)
 
@@ -53,9 +47,9 @@ class NestedBoundField(BoundField):
         field = self.fields[key]
         value = self.value.get(key) if self.value else None
         error = self.errors.get(key) if isinstance(self.errors, dict) else None
-        if hasattr(field, 'fields'):
-            return NestedBoundField(field, value, error, prefix=self.name + '.')
-        return BoundField(field, value, error, prefix=self.name + '.')
+        if hasattr(field, "fields"):
+            return NestedBoundField(field, value, error, prefix=self.name + ".")
+        return BoundField(field, value, error, prefix=self.name + ".")
 
 
 class BindingDict(MutableMapping):
@@ -98,7 +92,7 @@ class ReturnList(list):
     """
 
     def __init__(self, *args, **kwargs):
-        self.serializer = kwargs.pop('serializer')
+        self.serializer = kwargs.pop("serializer")
         super().__init__(*args, **kwargs)
 
     def __repr__(self):
@@ -118,7 +112,7 @@ class ReturnDict(OrderedDict):
     """
 
     def __init__(self, *args, **kwargs):
-        self.serializer = kwargs.pop('serializer')
+        self.serializer = kwargs.pop("serializer")
         super().__init__(*args, **kwargs)
 
     def copy(self):

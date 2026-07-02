@@ -37,14 +37,14 @@ print(protobuf_serializer.protobuf)
 
 # Serialize the data to JSON format
 json_serializer = AccountSerializer(json_data)
-print(json_serializer.json)
+print(json_serializer.data)
 
 # Deserialize the data from Protobuf format to JSON format
 protobuf_deserializer = AccountSerializer(protobuf_serializer.protobuf)
 print(protobuf_deserializer.data)
 
 # Deserialize the data from JSON format to Protobuf format
-json_deserializer = AccountSerializer(json_serializer.json)
+json_deserializer = AccountSerializer(json_serializer.data)
 print(json_deserializer.data)
 ```
 

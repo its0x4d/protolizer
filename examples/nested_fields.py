@@ -1,5 +1,5 @@
 from protolizer import Serializer, fields
-from tests.config.generated_proto.protobuf_pb2 import Account, AccountSettings
+from tests.config.generated_proto.protobuf_pb2 import Account
 
 
 class AccountSettingsSerializer(Serializer):
@@ -15,13 +15,7 @@ class AccountSerializer(Serializer):
         schema = Account
 
 
-json_data = {
-    'username': 'John Doe',
-    'balance': 12345,
-    'settings': {
-        'is_public': False
-    }
-}
+json_data = {"username": "John Doe", "balance": 12345, "settings": {"is_public": False}}
 
 serializer = AccountSerializer(json_data)
 proto_data = serializer.protobuf

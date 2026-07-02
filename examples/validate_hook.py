@@ -1,4 +1,4 @@
-from protolizer import Serializer, fields, ValidationError
+from protolizer import Serializer, ValidationError, fields
 from tests.config.generated_proto.protobuf_pb2 import Account
 
 
@@ -12,26 +12,17 @@ class AccountSerializer(Serializer):
     @staticmethod
     def validate_balance(value):
         if value < 0:
-            raise ValidationError('Balance must be positive')
+            raise ValidationError("Balance must be positive")
         return value
 
     @staticmethod
     def validate_username(value):
         if len(value) < 3:
-            raise ValidationError('Username must be at least 3 characters long')
+            raise ValidationError("Username must be at least 3 characters long")
         return value
 
 
-json_data = [
-    {
-        'username': 'John Doe',
-        'balance': 12345
-    },
-    {
-        'username': 'Jo',
-        'balance': -123
-    }
-]
+json_data = [{"username": "John Doe", "balance": 12345}, {"username": "Jo", "balance": -123}]
 
 # if `data` is not provided, `is_valid` will raise an exception
 # The `many` argument is used to indicate that the data is a list of objects (or a protobuf repeated field)

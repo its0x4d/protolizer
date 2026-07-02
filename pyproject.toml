@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "protolizer"
-version = "1.2.0"
+version = "1.4.0"
 description = "A simple library to serialize and deserialize protobuf messages"
 readme = "README.md"
 license = { text = "MIT" }
@@ -25,6 +25,36 @@ requires-python = ">=3.8"
 dependencies = [
     "protobuf>=6.0.0",
 ]
+
+[project.optional-dependencies]
+dev = [
+    "grpcio>=1.54.0",
+    "ruff>=0.8.0",
+    "mypy>=1.13.0",
+    "pre-commit>=4.0.0",
+    "types-protobuf",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py38"
+exclude = ["tests/config/generated_proto"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = false
+warn_unused_ignores = true
+ignore_missing_imports = true
+check_untyped_defs = false
+disable_error_code = ["assignment", "attr-defined", "no-any-return", "arg-type"]
+files = ["protolizer"]
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+ignore_errors = true
 
 [project.urls]
 Homepage = "https://github.com/its0x4d/protolizer"

@@ -9,7 +9,13 @@ Protolizer is a simple library to serialize and deserialize protobuf messages (J
 pip install protolizer
 ```
 
-For running the project's tests (which use generated gRPC stubs), install dev dependencies:
+For running the project's tests and development tools:
+
+```bash
+pip install -e ".[dev]"
+```
+
+Or using requirements files:
 
 ```bash
 pip install -r requirements.txt -r requirements-dev.txt
@@ -55,28 +61,53 @@ print(json_deserializer.protobuf)
 ```
 If you want to see more examples, please check the [examples](examples) directory.
 
+### Enum fields
+
+```python
+from myapp_pb2 import Account, Status
+
+class AccountSerializer(Serializer):
+    username = fields.CharField()
+    status = fields.EnumField(Status)
+
+    class Meta:
+        schema = Account
+```
+
+### Partial updates
+
+Pass `partial=True` to validate only the fields present in input (useful for PATCH-style updates):
+
+```python
+serializer = AccountSerializer(data={"balance": 200}, partial=True)
+serializer.is_valid(raise_exception=True)
+```
+
 **Note:** `Meta.schema` must be the generated protobuf message class (from your `*_pb2` module). gRPC (`grpcio`) is only needed if you use gRPC services; for JSON ↔ protobuf conversion, the `protobuf` package alone is enough.
 
 ## Supported fields
 
 - [X] CharField
+- [X] BytesField
 - [X] IntField
 - [X] FloatField
 - [X] BooleanField
 - [X] DateTimeField
 - [X] TimestampField
+- [X] EnumField
 - [X] DictField
 - [X] ListField
 - [X] CustomField (for custom responses)
 
+Field options: `read_only`, `write_only`, `required`, `allow_null`.
+
 ## Contribute
 
-- Fork the repository
-- Create a branch for your feature
-- Make your changes
-- Create a pull request
-- Wait for the code review
-- If everything is OK, your pull request will be merged
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
+
+## Security
+
+See [SECURITY.md](SECURITY.md) to report vulnerabilities.
 
 ## License
 

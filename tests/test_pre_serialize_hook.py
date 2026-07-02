@@ -14,28 +14,24 @@ class AccountSerializer(Serializer):
         schema = Account
 
     def pre_serialize(self, data):
-        del data['balance']
+        del data["balance"]
         return data
 
 
 class PerSerializeTestCase(unittest.TestCase):
-
     def test_with_json_input(self):
-        json_data = {
-            'username': 'John Doe',
-            'balance': 12345
-        }
+        json_data = {"username": "John Doe", "balance": 12345}
         serializer = AccountSerializer(json_data)
         proto_data = serializer.protobuf
-        self.assertNotIn('balance', MessageToDict(proto_data))
+        self.assertNotIn("balance", MessageToDict(proto_data))
 
     def test_with_protobuf_input(self):
-        protobuf = Account(username='Jane', balance=999)
+        protobuf = Account(username="Jane", balance=999)
         serializer = AccountSerializer(protobuf)
         proto_data = serializer.protobuf
-        self.assertEqual(proto_data.username, 'Jane')
-        self.assertNotIn('balance', MessageToDict(proto_data))
+        self.assertEqual(proto_data.username, "Jane")
+        self.assertNotIn("balance", MessageToDict(proto_data))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

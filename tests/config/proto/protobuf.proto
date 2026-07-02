@@ -15,7 +15,13 @@ message FieldsMessage {
   repeated string repeated_string_field = 7;
   Account nested_field = 8;
   repeated Account repeated_nested_field = 9;
+  Status status_field = 10;
+}
 
+enum Status {
+  STATUS_UNSPECIFIED = 0;
+  ACTIVE = 1;
+  INACTIVE = 2;
 }
 
 message GetAccountRequest {
