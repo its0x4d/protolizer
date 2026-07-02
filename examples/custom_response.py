@@ -18,7 +18,7 @@ class AccountSerializer(Serializer):
 
 
 json_data = {
-    'username': 'John Doe'
+    "username": "John Doe"
     # We don't need to pass the `balance`, because it's a custom field
 }
 serializer = AccountSerializer(json_data)

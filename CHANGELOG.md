@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- CI: require Python 3.10+ to match `protobuf` 6.x, format examples, and split lint/test jobs.
+
 ## [1.4.0] - 2026-07-02
 
 ### Added

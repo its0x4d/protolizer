@@ -598,7 +598,7 @@ class DateTimeField(BaseField):
 
     def to_internal_value(self, data: Any) -> Optional[datetime]:
         if data is Empty:
-            return data
+            return None
         if isinstance(data, datetime):
             return data
         if self.format:
